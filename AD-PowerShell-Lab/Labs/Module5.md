@@ -49,7 +49,7 @@
 
     ![JEA-Session](./src/05-01-04-JEASession.png)
 
-    Notice the difference in the number of commands there are available
+    Notice the difference in the number of commands that are available
 
 5. Cleanup the session configuration information
 
@@ -105,9 +105,9 @@ For this section we will be working with a previously configured PSsessionConfig
 
     ![JIT](./src/05-02-03-JIT.png)
 
-    Notice the TTL number. After, this time reaches 0, AD will remove the person from the group, effectively removing their DNS Admin privileges.
+    Notice the TTL number. After this timer reaches 0, AD will remove the person from the group effectively removing their DNS Admin privileges.
 
-4. Now that we have given ourselves some rights. Lets try again to connect to the Domain Controller to manage DNS.
+4. Now that we have given ourselves some rights, lets try again to connect to the Domain Controller to manage DNS.
 
     ```PowerShell
     $dnsAdmin = New-PSSession -ComputerName ($env:LOGONSERVER).Split('\')[2] -ConfigurationName DnsAdmin
@@ -134,7 +134,7 @@ For this section we will be working with a previously configured PSsessionConfig
 
 ## Constrained Language Mode
 
-In this final section lets take a look at some of the capabilities of constrained language mode. It is worth pausing here to recognize the contrained language mode is designed to work with application whitelisting versus working in conjunction with JIT and JEA.
+In this final section lets take a look at some of the capabilities of constrained language mode. It is worth pausing here to recognize that the contrained language mode is designed to work with application whitelisting versus working in conjunction with JIT and JEA.
 
 1. Open a PowerShell session and view the current language mode
 
