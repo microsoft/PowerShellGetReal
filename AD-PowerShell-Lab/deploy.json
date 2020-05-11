@@ -1,0 +1,177 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "VMadminUsername": {
+            "type": "string"
+        },
+        "VMadminPassword": {
+            "type": "securestring"
+        },
+        "ImageSKU": {
+            "type": "string",
+            "defaultValue": "2019-Datacenter"
+        },
+        "domainfqdn": {
+            "type": "string",
+            "defaultValue": "contoso.com"
+        },
+        "vmWorkerNamePrefix": {
+            "type": "string",
+            "defaultValue": "Win"
+        },
+        "numberOfvmWorkerInstances": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of VMs to deploy"
+            }
+        }
+    },
+    "variables": {
+        "AssestLocationURI": "https://raw.githubusercontent.com/dacarroll/PoshFundamentalsLab/master/AD-PowerShell-Lab/",
+        "virtualNetworkName": "POSHVnet",
+        "subnetName": "ContosoSub",
+        "MachineName1": "ContosoDC1",
+        "VMSize": "Standard_B2ms"
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-09-01",
+            "name": "creatPoshVnet",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks",
+                            "name": "[variables('virtualNetworkName')]",
+                            "apiVersion": "2017-06-01",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressSpace": {
+                                    "addressPrefixes": [
+                                        "192.168.0.0/16"
+                                    ]
+                                },
+                                "dhcpOptions": {
+                                    "dnsServers": [
+                                        "192.168.40.20",
+                                        "8.8.8.8"
+                                    ]
+                                },
+                                "subnets": [
+                                    {
+                                        "name": "[variables('subnetName')]",
+                                        "properties": {
+                                            "addressPrefix": "192.168.40.0/24"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "outputs": {
+                        "vNetID": {
+                            "type": "string",
+                            "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "name": "createContosoDC1",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(variables('AssestLocationURI'), 'Templates/advm.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "machineName": {
+                        "value": "[variables('MachineName1')]"
+                    },
+                    "VNetID": {
+                        "value": "[reference('creatPoshVnet').outputs.vNetID.value]"
+                    },
+                    "SubnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "IPAddress": {
+                        "value": "192.168.40.20"
+                    },
+                    "DNSaddress": {
+                        "value": ["192.168.40.20", "8.8.8.8"]
+                    },
+                    "AdminUserName": {
+                        "value": "[parameters('VMadminUsername')]"
+                    },
+                    "AdminPassword": {
+                        "value": "[parameters('VMadminPassword')]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('VMSize')]"
+                    },
+                    "ImageSKU": {
+                        "value": "[parameters('ImageSKU')]"
+                    },
+                    "domainfqdn": {
+                        "value": "[parameters('domainfqdn')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "creatPoshVnet"
+            ]
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "name": "CreateWorkerNodes",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(variables('AssestLocationURI'), 'Templates/multiplevms.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "domainToJoin": {
+                        "value": "[parameters('domainfqdn')]"
+                    },
+                    "vmAdminUsername": {
+                        "value": "[parameters('VMadminUsername')]"
+                    },
+                    "vmAdminPassword": {
+                        "value": "[parameters('VMadminPassword')]"
+                    },
+                    "vmNamePrefix": {
+                        "value": "[parameters('vmWorkerNamePrefix')]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('VMSize')]"
+                    },
+                    "numberOfInstances": {
+                        "value": "[parameters('numberOfvmWorkerInstances')]"
+                    },
+                    "vnetName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "DNSaddress": {
+                        "value": ["192.168.40.20", "8.8.8.8"]
+                    }
+                }
+            },
+            "dependsOn": [
+                "createContosoDC1"
+            ]
+        }
+    ]
+}

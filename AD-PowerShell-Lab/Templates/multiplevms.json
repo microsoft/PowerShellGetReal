@@ -1,0 +1,199 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "domainToJoin": {
+      "type": "string",
+      "metadata": {
+        "description": "The FQDN of the AD domain"
+      }
+    },
+    "ouPath": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Specifies an organizational unit (OU) for the domain account. Enter the full distinguished name of the OU in quotation marks. Example: \"OU=testOU; DC=domain; DC=Domain; DC=com\""
+      }
+    },
+    "vmAdminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Local admin account for the Virtual Machine."
+      }
+    },
+    "DNSAddress": {
+        "type": "array"
+    },
+    "vmAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Local admin password for the Virtual Machine."
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "VM Name prefix"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2ms",
+      "metadata": {
+        "description": "The size of the virtual machines"
+      }
+    },
+    "numberOfInstances": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of VMs to deploy"
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of existing VNET where the VMs will be deployed."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the subnet in the existing VNET where the VMs will be deployed."
+      }
+    },
+    "windowsOSVersion": {
+      "type": "string",
+      "allowedValues": [
+        "19h2-pro"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2012-R2-Datacenter, 2016-Datacenter."
+      },
+      "defaultValue": "19h2-pro"
+    },
+    "Timezone": {
+      "type": "string",
+      "defaultValue": "Eastern Standard Time"
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "vmAdminUPN":"[concat(parameters('vmAdminUsername'),'@',parameters('domainToJoin'))]",
+    "imagePublisher": "MicrosoftWindowsDesktop",
+    "imageOffer": "Windows-10",
+    "vnetResourceGroup": "[resourceGroup().name]",
+    "vnetID": "[resourceId(variables('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
+    "provisionVmAgent": "true",
+    "osDiskcreateOption": "FromImage",
+    "storageAccountType": "Premium_LRS"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
+      "location": "[variables('location')]",
+      "copy": {
+        "name": "nicCopy",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+            "dnsServers": "[parameters('DNSAddress')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1))]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Project": "PoshLab"
+      },
+      "copy": {
+        "name": "vmCopy",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',parameters('vmNamePrefix'),copyIndex(1),'-NIC')]"
+      ],
+      "properties": {
+        "osProfile": {
+          "computerName": "[concat(parameters('vmNamePrefix'),copyIndex(1))]",
+          "adminUsername": "[parameters('vmAdminUsername')]",
+          "adminPassword": "[parameters('vmAdminPassword')]",
+          "windowsConfiguration": {
+            "provisionVmAgent": "[variables('provisionVmAgent')]",
+            "timeZone": "[parameters('Timezone')]"
+          }
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[parameters('windowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "[variables('osDiskcreateOption')]",
+            "managedDisk": {
+              "storageAccountType": "[variables('storageAccountType')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces/',concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+        "apiVersion": "2018-10-01",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name": "[concat(parameters('vmNamePrefix'), copyindex(1),'/', 'joindomain')]",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines/',concat(parameters('vmNamePrefix'),copyIndex(1)))]"
+        ],
+        "copy": {
+            "name": "domain-join-loop",
+            "count": "[parameters('numberOfInstances')]"
+        },
+        "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "JsonADDomainExtension",
+            "typeHandlerVersion": "1.3",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+                "name": "[parameters('domainToJoin')]",
+                "ouPath": "[parameters('ouPath')]",
+                "user": "[variables('vmAdminUPN')]",
+                "restart": "true",
+                "options": "3"
+            },
+            "protectedSettings": {
+                "password": "[parameters('vmAdminPassword')]"
+            }
+        }
+    }
+  ]
+}

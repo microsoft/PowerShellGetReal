@@ -1,4 +1,8 @@
 
+# PowerShell Lab
+
+This repository seeks to provide getting started material for how to leverage PowerShell in your daily job. Enjoy.
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
