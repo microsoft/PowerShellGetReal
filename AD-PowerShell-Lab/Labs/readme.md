@@ -14,7 +14,7 @@ Understand the PowerShell pipeline, using the whole pipeline ByValue and ByPrope
 
 * [**Module 2 - Pipeline**](./Module2.md)
 
-Understanding execution policiesm, leveraging Variables, Arrays, and the built-in scripting constructs
+Understanding execution policies, leveraging Variables, Arrays, and the built-in scripting constructs
 
 * [**Module 3 - From CLI to Scripts**](./Module3.md)
 

@@ -16,4 +16,8 @@
 
 ## Notes
 
-* One VM size is specified for all VMs
+* All VMs deployed are the same size.
+
+## Lab Walkthrough
+
+* [Lab Overview](./Labs/readme.md)
