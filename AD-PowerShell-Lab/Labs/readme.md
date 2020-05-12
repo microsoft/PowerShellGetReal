@@ -2,7 +2,7 @@
 
 ## Lab Layout
 
-![Layout](./src/01-PoshLabOverview.png?raw=true)
+![Layout](./src/01-PoshLab-Overview.png?raw=true)
 
 ## These practical exercises are broken into 6 modules
 
