@@ -148,7 +148,7 @@
                             "id": "[variables('subnetRef')]"
                         },
                         "publicIPAddress": {
-                            "id": "[concat('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses/', concat(parameters('vmNamePrefix'),copyIndex(1),'-PubNIC'))]"
                         }
                     }
                 }
