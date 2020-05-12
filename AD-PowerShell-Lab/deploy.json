@@ -16,6 +16,10 @@
                 "2016-Datacenter"
             ]
         },
+        "domainfqdn": {
+            "type": "string",
+            "defaultValue": "contoso.com"
+        },
         "ClientVmOSVersion": {
             "type": "string",
             "defaultValue": "19h2-pro",
@@ -24,20 +28,35 @@
                 "19h2-ent"
             ]
         },
-        "domainfqdn": {
-            "type": "string",
-            "defaultValue": "contoso.com"
-        },
-        "vmWorkerNamePrefix": {
-            "type": "string",
-            "defaultValue": "Win"
-        },
         "numberOfClientInstances": {
             "type": "int",
             "defaultValue": 2,
             "metadata": {
                 "description": "Number of VMs to deploy"
             }
+        },
+        "ClientNamePrefix": {
+            "type": "string",
+            "defaultValue": "Win"
+        },
+        "ServerVmOSVersion": {
+            "type": "string",
+            "defaultValue": "2019-Datacenter",
+            "allowedValues": [
+                "2019-Datacenter",
+                "2016-Datacenter"
+            ]
+        },
+        "numberOfServerInstances": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Number of VMs to deploy"
+            }
+        },
+        "ServerNamePrefix": {
+            "type": "string",
+            "defaultValue": "File"
         }
     },
     "variables": {
@@ -186,7 +205,7 @@
                         "value": "[parameters('VMadminPassword')]"
                     },
                     "vmNamePrefix": {
-                        "value": "[parameters('vmWorkerNamePrefix')]"
+                        "value": "[parameters('ClientNamePrefix')]"
                     },
                     "vmSize": {
                         "value": "[variables('VMSize')]"
@@ -205,6 +224,68 @@
                     },
                     "windowsOSVersion": {
                         "value": "[parameters('ClientVmOSVersion')]"
+                    },
+                    "ouPath": {
+                        "value": "OU=Workstations,OU=Production,DC=contoso,DC=com"
+                    }
+                }
+            },
+            "dependsOn": [
+                "createContosoDC1ADOU"
+            ]
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "name": "CreateServerNodes",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(variables('AssestLocationURI'), 'Templates/multiplevms.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "domainToJoin": {
+                        "value": "[parameters('domainfqdn')]"
+                    },
+                    "vmAdminUsername": {
+                        "value": "[parameters('VMadminUsername')]"
+                    },
+                    "vmAdminPassword": {
+                        "value": "[parameters('VMadminPassword')]"
+                    },
+                    "vmNamePrefix": {
+                        "value": "[parameters('ServerNamePrefix')]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('VMSize')]"
+                    },
+                    "numberOfInstances": {
+                        "value": "[parameters('numberOfServerInstances')]"
+                    },
+                    "vnetName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "CreatePublicIP": {
+                        "value": "true"
+                    },
+                    "DNSaddress": {
+                        "value": ["192.168.40.20"]
+                    },
+                    "windowsOSVersion": {
+                        "value": "[parameters('ServerVmOSVersion')]"
+                    },
+                    "publisher": {
+                        "value": "MicrosoftWindowsServer"
+                    },
+                    "offer": {
+                        "value": "WindowsServer"
+                    },
+                    "ouPath": {
+                        "value": "OU=Servers,OU=Production,DC=contoso,DC=com"
                     }
                 }
             },

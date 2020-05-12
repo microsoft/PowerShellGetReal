@@ -61,16 +61,49 @@
         "description": "Name of the subnet in the existing VNET where the VMs will be deployed."
       }
     },
+    "publisher": {
+        "type": "string",
+        "allowedValues": [
+            "MicrosoftWindowsServer",
+            "MicrosoftSQLServer",
+            "MicrosoftWindowsDesktop"
+        ],
+        "defaultValue": "MicrosoftWindowsDesktop"
+    },
+    "offer": {
+        "type": "string",
+        "allowedValues": [
+            "WindowsServer",
+            "WindowsServerSemiAnnual",
+            "SQL2016SP1-WS2016",
+            "SQL2017-WS2016",
+            "Windows-10"
+        ],
+        "defaultValue": "Windows-10"
+    },
     "windowsOSVersion": {
       "type": "string",
       "allowedValues": [
         "19h2-pro",
-        "19h2-ent"
+        "19h2-ent",
+        "2019-Datacenter",
+        "2016-Datacenter"
       ],
       "metadata": {
         "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2012-R2-Datacenter, 2016-Datacenter."
       },
       "defaultValue": "19h2-pro"
+    },
+    "CreatePublicIP": {
+        "type": "string",
+        "defaultValue": "false",
+        "allowedValues": [
+            "true",
+            "false"
+        ],
+        "metadata": {
+            "description": "Select whether the deployment should include a public IP, Default is false"
+        }
     },
     "Timezone": {
       "type": "string",
@@ -80,8 +113,6 @@
   "variables": {
     "location": "[resourceGroup().location]",
     "vmAdminUPN":"[concat(parameters('vmAdminUsername'),'@',parameters('domainToJoin'))]",
-    "imagePublisher": "MicrosoftWindowsDesktop",
-    "imageOffer": "Windows-10",
     "vnetResourceGroup": "[resourceGroup().name]",
     "vnetID": "[resourceId(variables('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
@@ -91,6 +122,66 @@
   },
   "resources": [
     {
+        "condition": "[equals(parameters('CreatePublicIP'), 'true')]",
+        "apiVersion": "2016-09-01",
+        "name": "[concat('Create',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]",
+        "type": "Microsoft.Resources/deployments",
+        "properties": {
+            "mode": "Incremental",
+            "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {},
+                "variables": {},
+                "resources": [
+                    {
+                        "type": "Microsoft.Network/publicIPAddresses",
+                        "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]",
+                        "apiVersion": "2016-03-30",
+                        "location": "[resourceGroup().location]",
+                          "copy": {
+                          "name": "PubnicCopy",
+                          "count": "[parameters('numberOfInstances')]"
+                        },
+                        "properties": {
+                            "publicIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "condition": "[equals(parameters('CreatePublicIP'), 'true')]",
+        "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2018-04-01",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "Project": "GetRealLab"
+        },
+        "properties": {
+            "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                        "privateIPAllocationMethod": "Dynamic",
+                        "subnet": {
+                            "id": "[variables('subnetRef')]"
+                        },
+                        "publicIPAddress": {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+                        }
+                    }
+                }
+            ]
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Network/networkInterfaces/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+        ]
+    },
+    {
+      "condition": "[equals(parameters('CreatePublicIP'), 'false')]",
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
@@ -146,8 +237,8 @@
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[variables('imagePublisher')]",
-            "offer": "[variables('imageOffer')]",
+            "publisher": "[parameters('Publisher')]",
+            "offer": "[parameters('Offer')]",
             "sku": "[parameters('windowsOSVersion')]",
             "version": "latest"
           },
