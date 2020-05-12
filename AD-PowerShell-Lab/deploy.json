@@ -162,7 +162,7 @@
                 }
             },
             "dependsOn": [
-                "resetContosoDC1DNS"
+                "createContosoDC1"
             ]
         },
         {
@@ -209,7 +209,7 @@
                 }
             },
             "dependsOn": [
-                "createContosoDC1"
+                "createContosoDC1ADOU"
             ]
         }
     ]
