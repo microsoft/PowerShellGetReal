@@ -34,7 +34,7 @@
         },
         "numberOfClientInstances": {
             "type": "int",
-            "defaultValue": "2",
+            "defaultValue": 2,
             "metadata": {
                 "description": "Number of VMs to deploy"
             }

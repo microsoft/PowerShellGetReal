@@ -451,37 +451,6 @@
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', parameters('machineName'))]"
             ]
-        },
-                {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('machineName'), '/DSC')]",
-            "apiVersion": "2017-12-01",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.73",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "ModulesUrl": "[concat(parameters('DSCURL'), 'DSC/', 'ADSetup.zip')]",
-                    "ConfigurationFunction": "[parameters('ConfigurationFunction')]",
-                    "Properties": {
-                        "DomainName": "[parameters('domainfqdn')]",
-                        "AdminCreds": {
-                            "UserName": "[parameters('AdminUserName')]",
-                            "Password": "PrivateSettingsRef:AdminPassword"
-                        }
-                    }
-                },
-                "protectedSettings": {
-                    "Items": {
-                        "AdminPassword": "[parameters('AdminPassword')]"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('machineName'))]"
-            ]
         }
     ]
 }
