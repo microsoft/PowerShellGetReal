@@ -241,7 +241,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[uri(variables('AssestLocationURI'), 'Templates/multiplevms.json')]",
+                    "uri": "[uri(variables('AssestLocationURI'), 'Templates/multipleserver.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -268,9 +268,6 @@
                     },
                     "subnetName": {
                         "value": "[variables('subnetName')]"
-                    },
-                    "CreatePublicIP": {
-                        "value": "true"
                     },
                     "DNSaddress": {
                         "value": ["192.168.40.20"]

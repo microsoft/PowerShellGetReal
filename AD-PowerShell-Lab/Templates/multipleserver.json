@@ -94,6 +94,17 @@
       },
       "defaultValue": "19h2-pro"
     },
+    "CreatePublicIP": {
+        "type": "string",
+        "defaultValue": "false",
+        "allowedValues": [
+            "true",
+            "false"
+        ],
+        "metadata": {
+            "description": "Select whether the deployment should include a public IP, Default is false"
+        }
+    },
     "Timezone": {
       "type": "string",
       "defaultValue": "Eastern Standard Time"
@@ -111,30 +122,55 @@
   },
   "resources": [
     {
-      "apiVersion": "2016-03-30",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
-      "location": "[variables('location')]",
-      "copy": {
-        "name": "nicCopy",
-        "count": "[parameters('numberOfInstances')]"
-      },
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              }
-            }
-          }
-        ],
-        "dnsSettings": {
-            "dnsServers": "[parameters('DNSAddress')]"
+        "name": "[concat('Create',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]",
+        "type": "Microsoft.Network/publicIPAddresses",
+        "apiVersion": "2016-03-30",
+        "location": "[variables('location')]",
+        "copy": {
+          "name": "PubNicCopy",
+          "count": "[parameters('numberOfInstances')]"
+        },
+        "tags": {
+            "Project": "GetRealLab"
+        },
+        "properties": {
+                "publicIPAllocationMethod": "Dynamic"
         }
-      }
+    },
+    {
+        "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2018-04-01",
+        "location": "[variables('location')]",
+        "copy": {
+          "name": "NicCopy",
+          "count": "[parameters('numberOfInstances')]"
+        },
+        "tags": {
+            "Project": "GetRealLab"
+        },
+        "properties": {
+            "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                        "privateIPAllocationMethod": "Dynamic",
+                        "subnet": {
+                            "id": "[variables('subnetRef')]"
+                        },
+                        "publicIPAddress": {
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+                        }
+                    }
+                }
+            ],
+              "dnsSettings": {
+              "dnsServers": "[parameters('DNSAddress')]"
+          }
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+        ]
     },
     {
       "apiVersion": "2017-12-01",
