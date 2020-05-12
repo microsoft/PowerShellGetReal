@@ -161,7 +161,7 @@
                             "id": "[variables('subnetRef')]"
                         },
                         "publicIPAddress": {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
                         }
                     }
                 }
@@ -171,14 +171,14 @@
           }
         },
         "dependsOn": [
-            "[concat('Microsoft.Network/networkInterfaces/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+            "[concat('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
         ]
     },
     {
       "condition": "[equals(parameters('CreatePublicIP'), 'false')]",
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NICs')]",
+      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
       "location": "[variables('location')]",
       "copy": {
         "name": "nicCopy",
