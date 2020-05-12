@@ -94,17 +94,6 @@
       },
       "defaultValue": "19h2-pro"
     },
-    "CreatePublicIP": {
-        "type": "string",
-        "defaultValue": "false",
-        "allowedValues": [
-            "true",
-            "false"
-        ],
-        "metadata": {
-            "description": "Select whether the deployment should include a public IP, Default is false"
-        }
-    },
     "Timezone": {
       "type": "string",
       "defaultValue": "Eastern Standard Time"
@@ -122,7 +111,7 @@
   },
   "resources": [
     {
-        "name": "[concat('Create',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]",
+        "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]",
         "type": "Microsoft.Network/publicIPAddresses",
         "apiVersion": "2016-03-30",
         "location": "[variables('location')]",
