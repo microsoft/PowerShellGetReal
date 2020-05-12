@@ -159,7 +159,7 @@
                             "id": "[variables('subnetRef')]"
                         },
                         "publicIPAddress": {
-                            "id": "[resourceId('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
                         }
                     }
                 }
