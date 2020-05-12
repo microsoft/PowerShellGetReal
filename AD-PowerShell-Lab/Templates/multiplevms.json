@@ -139,42 +139,6 @@
         }
     },
     {
-        "condition": "[equals(parameters('CreatePublicIP'), 'true')]",
-        "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
-        "type": "Microsoft.Network/networkInterfaces",
-        "apiVersion": "2018-04-01",
-        "location": "[resourceGroup().location]",
-        "copy": {
-          "name": "NicCopy",
-          "count": "[parameters('numberOfInstances')]"
-        },
-        "tags": {
-            "Project": "GetRealLab"
-        },
-        "properties": {
-            "ipConfigurations": [
-                {
-                    "name": "ipconfig1",
-                    "properties": {
-                        "privateIPAllocationMethod": "Dynamic",
-                        "subnet": {
-                            "id": "[variables('subnetRef')]"
-                        },
-                        "publicIPAddress": {
-                            "id": "[resourceId('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
-                        }
-                    }
-                }
-            ],
-              "dnsSettings": {
-              "dnsServers": "[parameters('DNSAddress')]"
-          }
-        },
-        "dependsOn": [
-            "[concat('Microsoft.Network/publicIPAddresses/',parameters('vmNamePrefix'),copyIndex(1),'-PubNIC')]"
-        ]
-    },
-    {
       "condition": "[equals(parameters('CreatePublicIP'), 'false')]",
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/networkInterfaces",
