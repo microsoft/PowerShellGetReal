@@ -6,13 +6,16 @@
 
 ## Details
 
-* Deploys the following infrastructure:
+Deploys the following infrastructure:
+
 * Virtual Network
   * 1 subnet
 * 1 Domain Controller
   * DSC installs AD
-* 1 File Server
-* **X** (Configurable) # of Windows Client Machines
+* Any **#** of Windows Server Machines
+  * Joined to "OU=Servers,OU=Production,DC=contoso,DC=com"
+* Any **#** of Windows Client Machines
+  * Joined to "OU=Workstations,OU=Production,DC=contoso,DC=com"
 
 ## Notes
 
