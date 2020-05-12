@@ -1,0 +1,46 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "VMname": {
+            "type": "string"
+        },
+        "DSCURL": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/microsoft/PowerShellGetReal/master/AD-PowerShell-Lab/"
+        },
+        "Timestamp": {
+            "type": "string",
+            "defaultValue": "MM/dd/yyyy H:mm:ss tt",
+            "metadata": {
+                "description": "The current datetime, as a string, to force the request to go through ARM even if all fields are the same as last ARM deployment of this template."
+            }
+        },
+        "ConfigurationFunction": {
+            "type": "string"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('VMname'), '/DSC')]",
+            "apiVersion": "2017-12-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "ModulesUrl": "[concat(parameters('DSCURL'), 'DSC/', 'ADOU.zip')]",
+                    "ConfigurationFunction": "[parameters('ConfigurationFunction')]",
+                    "Properties": {
+                        "Timestamp": "[parameters('Timestamp')]"
+                    }
+                }
+            }
+        }
+    ]
+}

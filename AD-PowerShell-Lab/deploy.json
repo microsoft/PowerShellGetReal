@@ -2,15 +2,27 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "VMadminUsername": {
+        "VmAdminUsername": {
             "type": "string"
         },
-        "VMadminPassword": {
+        "VmAdminPassword": {
             "type": "securestring"
         },
-        "ImageSKU": {
+        "ADVmOSVersion": {
             "type": "string",
-            "defaultValue": "2019-Datacenter"
+            "defaultValue": "2019-Datacenter",
+            "allowedValues": [
+                "2019-Datacenter",
+                "2016-Datacenter"
+            ]
+        },
+        "ClientVmOSVersion": {
+            "type": "string",
+            "defaultValue": "19h2-pro",
+            "allowedValues": [
+                "19h2-pro",
+                "19h2-ent"
+            ]
         },
         "domainfqdn": {
             "type": "string",
@@ -20,15 +32,16 @@
             "type": "string",
             "defaultValue": "Win"
         },
-        "numberOfvmWorkerInstances": {
+        "numberOfClientInstances": {
             "type": "int",
+            "defaultValue": "2",
             "metadata": {
                 "description": "Number of VMs to deploy"
             }
         }
     },
     "variables": {
-        "AssestLocationURI": "https://raw.githubusercontent.com/dacarroll/PoshFundamentalsLab/master/AD-PowerShell-Lab/",
+        "AssestLocationURI": "https://raw.githubusercontent.com/microsoft/PowerShellGetReal/master/AD-PowerShell-Lab/",
         "virtualNetworkName": "POSHVnet",
         "subnetName": "ContosoSub",
         "MachineName1": "ContosoDC1",
@@ -118,7 +131,7 @@
                         "value": "[variables('VMSize')]"
                     },
                     "ImageSKU": {
-                        "value": "[parameters('ImageSKU')]"
+                        "value": "[parameters('ADVmOSVersion')]"
                     },
                     "domainfqdn": {
                         "value": "[parameters('domainfqdn')]"
@@ -131,7 +144,30 @@
         },
         {
             "apiVersion": "2016-09-01",
-            "name": "CreateWorkerNodes",
+            "name": "createContosoDC1ADOU",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(variables('AssestLocationURI'), 'Templates/ADOUCreate.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "VMName": {
+                        "value": "[variables('MachineName1')]"
+                    },
+                    "ConfigurationFunction": {
+                        "value": "ADOU.ps1\\CreateDomainOU"
+                    }
+                }
+            },
+            "dependsOn": [
+                "resetContosoDC1DNS"
+            ]
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "name": "CreateClientNodes",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
@@ -156,7 +192,7 @@
                         "value": "[variables('VMSize')]"
                     },
                     "numberOfInstances": {
-                        "value": "[parameters('numberOfvmWorkerInstances')]"
+                        "value": "[parameters('numberOfClientInstances')]"
                     },
                     "vnetName": {
                         "value": "[variables('virtualNetworkName')]"
@@ -165,7 +201,10 @@
                         "value": "[variables('subnetName')]"
                     },
                     "DNSaddress": {
-                        "value": ["192.168.40.20", "8.8.8.8"]
+                        "value": ["192.168.40.20"]
+                    },
+                    "windowsOSVersion": {
+                        "value": "[parameters('ClientVmOSVersion')]"
                     }
                 }
             },

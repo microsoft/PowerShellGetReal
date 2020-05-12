@@ -1,7 +1,14 @@
 
-# PowerShell Lab
+# PowerShell Get Real
 
-This repository seeks to provide getting started material for how to leverage PowerShell in your daily job. Enjoy.
+PowerShell is a fun tool that can be integrated into all aspects of managing IT systems. This repository is designed to remove much of the fear associated from using a CLI instead of a GUI and lower “the hurdle” with real-world, easy to use/re-use IT Pro PowerShell scenarios.
+
+A few of the common scenarios that will be covered:
+
+* “Who rebooted this server and when?”
+* “Is this patch installed on these 400 systems?”  
+* “What is the IP config of these 50 Domain Controllers?”  
+
 
 # Contributing
 
