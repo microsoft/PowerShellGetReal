@@ -178,7 +178,7 @@
       "condition": "[equals(parameters('CreatePublicIP'), 'false')]",
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NIC')]",
+      "name": "[concat(parameters('vmNamePrefix'),copyIndex(1),'-NICs')]",
       "location": "[variables('location')]",
       "copy": {
         "name": "nicCopy",
