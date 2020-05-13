@@ -13,9 +13,10 @@
     >**Challenge:** Create a **Pipeline** that displays just the process names and their PID.
     >**Question:** What syntax is required to restrict the table to displaying only processes starting or ending with “s”?
 
-    **Hint:** Look back at exercise 1-7 
-    ```PowerShell 
-    Get-Process -Name (s* | *s) | Format-Table
+    **Hint:** Look back at exercise 1-7
+
+    ```PowerShell
+    Get-Process -Name s*,*s | Format-Table
     ```
 
 2. How about creating a table for all running processes with a Working Set of 30Mb or more:
@@ -32,7 +33,7 @@
     # Review the output of each command below and observe the differences in output as it builds:
     Get-WmiObject win32_operatingsystem
     Get-WmiObject win32_operatingsystem | Format-list *
-    Get-WmiObject –computername <name> win32_operatingsystem | Format-Table –property caption,version,csname –Auto
+    Get-WmiObject –Computername File1 win32_operatingsystem | Format-Table –property caption,version,csname –Auto
     ```
 
     >**Challenge:** Edit the code so that the first column in the table shows the **ComputerName**
@@ -40,7 +41,7 @@
 2. Explore some PowerShell code to search the System event log for event ID 1074 (which indicates a system reboot), and display the results in a table.
 
     ```PowerShell
-    Get-eventlog –computername <name> -log system |
+    Get-Eventlog –Computername File1 -log system |
     Where-Object {$_.eventid –eq ‘1074’} |
     Format-Table machinename, username, timegenerated –autosize
     ```

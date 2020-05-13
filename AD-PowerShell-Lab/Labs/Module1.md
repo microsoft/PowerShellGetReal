@@ -13,7 +13,7 @@
 2. **Sneak Peak** explore the output of the following to get a hint of what you can easily accomplish with just a sprinkle of PowerShell:
 
     ```PowerShell
-    Get-WmiObject –computername <name> `
+    Get-WmiObject –computername file1 `
     win32_operatingsystem  | Select-Object pscomputername,caption,installdate,`
     lastbootuptime | Format-table -auto
     ```
@@ -21,7 +21,7 @@
 3. Open the PowerShell console and execute the cmdlet:
 
     ```PowerShell
-    Start-Transcript <PathToFile.txt>
+    Start-Transcript $env:USERPROFILE\Desktop
     ```
 
 4. Execute these cmdlets, one after the other:
@@ -94,7 +94,7 @@
     >Ensure you are running PowerShell **elevated**
 
     ```PowerShell
-    Update-Help –sourcepath <\\<SourcePath> -force
+    Update-Help –sourcepath \\file1\PoshHelp -force
     ```
 
 ## 1.4: Using Get-Command
@@ -148,7 +148,7 @@
 2. Create an alias for the Get-Help cmdlet:
 
     ```PowerShell
-    New-Alias PleaseGetMesomeHelp Get-Help
+    New-Alias PleaseGetMeSomeHelp Get-Help
     PleaseGetMeSomeHelp # Enter
     New-Alias gh Get-Help
     gh # Enter

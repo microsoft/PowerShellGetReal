@@ -10,51 +10,121 @@
 1. Run the following commands
 
     ```PowerShell
-    Get-ADUser –filter {samaccountname –eq $env:UserName –properties * }
+    Get-ADUser -Filter "samaccountname -eq '$env:USERNAME'" -Properties *
     ```
 
     ```PowerShell
-    Get-ADUser –filter {objectclass –eq “user”} –properties * | Select samaccountname,passwordneverexpires,enabled
+    Get-ADUser -Filter "objectclass -eq 'user'" -Properties * | Select samaccountname,passwordneverexpires,enabled
     ```
+
+    Now that we know how to get all user objects with and select specific attributes, we can take that a step further and filter on
+    user objects that are enabled with a password that is set to never expire.
+
+    For example:
 
     ```PowerShell
-    (Get-ADUser -Identity User1<YourInitials> -Properties memberof | Select-Object MemberOf).memberof
+    Get-ADUser -Filter "objectclass -eq 'user'" -Properties * | Where-Object {($_.passwordneverexpires -eq 'True') -and ($_.enabled -eq 'True')} | select -ExpandProperty name
     ```
 
-    >**Extra:** Using AD users and Computers **DSA.msc**, review the groups your user account is a **Member Of.** Does the PoSH output **MATCH?**
+    >**Note:** After, we could generate reports for further review or layer in further automation tasks such as disabling accounts not authorized in this configuration.
+
+    Now let's look at how to use dot notation to expand group membership
+
+    ```PowerShell
+    (Get-ADUser -Identity $env:username -Properties memberof | Select-Object MemberOf).memberof
+    ```
+
+    >**Extra:** Using AD users and Computers **DSA.msc**, review the groups your user account is a **Member Of.** Does the PowerShell output **MATCH?**
 
 2. Now try this:
 
     ```PowerShell
-    Get-ADUser –filter * -searchbase “OU=PRODUCTION,DC=DOMAIN,DC=LAB”
+    $RootDSE = (Get-ADDomain).distinguishedname
+    Get-ADUser -Filter * -SearchBase "OU=Production,$RootDSE"
     ```
 
-    >**Question:** What CmdLet can be used to pull all the computers within the same OU?
+    In the above command using the **SearchBase** parameter we found all users in a specific OU.
+
+    >**Question:** What changes need to be made to the **SEARCHBASE** parameter below in order to get a list of all computers in a the same OU?
 
     ```PowerShell
     Get-ADComputer –filter * -searchbase “DC=DOMAIN,DC=LAB” –properties passwordlastset | Export-Csv pcpwdlist.csv
-
+    # or
     Get-ADComputer –filter * -properties * | Select-Object name, operatingsystem, operatingsystemservicepack | Out-GridView -title "Windows OS Inventory"
-
-
-    $oneyearago = (Get-Date).addYears(-1) <enter>
-    Get-ADComputer –Filter {lastlogontimestamp –lt $oneyearago} | Out-File c:\scripts\stalePCs.txt
     ```
+
+3. How about finding stale computers?
+
+    ```PowerShell
+    $oneyearago = (Get-Date).addYears(-1)
+    Get-ADComputer –Filter {lastlogontimestamp –lt $oneyearago}
+    ```
+
+    >**Note:** This lab environment doesn't have any stale computers, so no information will return.
 
 ## 6.2 Group Information
 
 1. Now let's shift gears and look at AD Group information
 
+    >**Note:**A prime activity might be to **MONITOR** well known group membership. Once way you could do that is by doing the following.
+
     ```PowerShell
-    Get-ADGroup  -filter {(cn –like  “*Admins*”)} –searchbase “CN=Users,DC=domain,DC=lab” | ForEach-Object {Get-ADGroupMember –Identity $_.samaccountname –recursive} | Export-Csv –path C:\scripts\Adminmembers.csv
-    Get-ADGroup –Filter {GroupCategory –eq  “Security” –and groupScope –eq “Universal”}
-    Get-ADGroupMember “Domain Admins” –recursive | select samaccountname,name | Format-Table –autosize
+    #Build an array that contains all the well known groups
+    $WellKnownGroups = @('Enterprise Admins'
+    'Domain Admins'
+    'Schema Admins'
+    'Administrators'
+    'Account Operators'
+    'Backup Operators'
+    'Print Operators'
+    'Server Operators'
+    'Domain Controllers'
+    'Read-only Domain Controllers'
+    'Group Policy Creator Owners'
+    'Cryptographic Operators'
+    'Distributed COM Users'
+    )
+    #Find all the groups within your domain
+    $ADWKG = $WellKnownGroups | Get-ADGroup
+    #Loop through all the users and computers within those groups
+    $MembersOfWKG = foreach ($WKG in $ADWKG) {
+        #create a filter to create an IF / Else statement
+        $filter = 'Domain Controllers', 'Read-only Domain Controllers'
+        #if not a in the above well-known groups do this
+        if (($WKG.Name -notin $filter)) {
+            $users = Get-ADGroupMember -Identity $WKG -Recursive | Get-ADUser
+            foreach ($user in $users){
+                [pscustomobject]@{
+                    Name = $user.name
+                    LastLogon = [datetime]::FromFileTime($user.lastLogonTimestamp)
+                    Group = $WKG.Name
+                }
+            }
+        #If the filter returned false then do this
+        } else {
+            $Computers = Get-ADGroupMember -Identity $WKG -Recursive | Get-ADComputer
+            foreach ($Computer in $Computers){
+                [pscustomobject]@{
+                    Name = $Computer.name
+                    LastLogon = [datetime]::FromFileTime($Computer.lastLogonTimestamp)
+                    Group = $WKG.Name
+                }
+            }
+        }
+    }
+    #Now we have all users in a variable called $MembersOfWKG
+    ```
+
+    Now that we have all users contained in a variable we could then build a report
+
+    ```PowerShell
+    $MembersOfWKG | ConvertTo-Html | Out-File $env:userprofile\Desktop\WellKnownGroup_Report.html
     ```
 
 ## 6.3 Automating NIC settings inventory
 
 ```PowerShell
-Invoke-Command -computername <name> -scriptblock {Get-WmiObject win32_networkadapterconfiguration | where {$_.IPEnabled -eq "True"} | Select-Object ipaddress,defaultipgateway,ipsubnet,dnsserversearchorder}
+Invoke-Command -computername File1 -scriptblock {Get-WmiObject win32_networkadapterconfiguration | where {$_.IPEnabled -eq "True"} | Select-Object ipaddress,defaultipgateway,ipsubnet,dnsserversearchorder}
 ```
 
 ## 6.4 Query Remote Registry

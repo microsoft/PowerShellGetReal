@@ -90,7 +90,7 @@ For this section we will be working with a previously configured PSsessionConfig
 2. Now elevate you privileges using Active Directory Privileged Access Managment:
 
     ```PowerShell
-    Add-ADGroupMember -Identity DNS-Elevated -Members $env:username -MemberTimeToLive ([timespan]"00:05")
+    Add-ADGroupMember -Identity DNS-Elevated -Members $env:username -MemberTimeToLive ([timespan]"01:00")
     ```
 
     >**Note:** This command is adding you to the AD Group **DNS-Elevated** with a TTL of 5 Minutes
@@ -107,7 +107,11 @@ For this section we will be working with a previously configured PSsessionConfig
 
     Notice the TTL number. After this timer reaches 0, AD will remove the person from the group effectively removing their DNS Admin privileges.
 
-4. Now that we have given ourselves some rights, lets try again to connect to the Domain Controller to manage DNS.
+4. **IMPORTANT** Logoff your workstation and log back in to refresh group memebership
+
+    ![Logoff](./src/05-02-04-Logoff.png)
+
+5. Now that we have given ourselves some rights, lets try again to connect to the Domain Controller to manage DNS.
 
     ```PowerShell
     $dnsAdmin = New-PSSession -ComputerName ($env:LOGONSERVER).Split('\')[2] -ConfigurationName DnsAdmin
@@ -119,13 +123,13 @@ For this section we will be working with a previously configured PSsessionConfig
     Enter-PSSession -Session $dnsAdmin
     ```
 
-5. Then, test administration using a **Get** command:
+6. Then, test administration using a **Get** command:
 
     ```PowerShell
     Get-DnsServer
     ```
 
-6. Cleanup Session
+7. Cleanup Session
 
     ```PowerShell
     exit

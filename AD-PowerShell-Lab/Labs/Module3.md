@@ -5,7 +5,7 @@
 1. Use the “Win32_BIOS” WMI class to list details of the BIOS on a list of  systems from a txt file (examine the syntax of the file):
 
     ```PowerShell
-    Get-Content <PathToFile.txt>  | Foreach-Object {Get-WmiObject -computername $_ win32_bios}
+    Get-Content $env:SystemDrive\Labfiles\computers.txt  | Foreach-Object {Get-WmiObject -computername $_ win32_bios}
     ```
 
 2. Now, use a WMI class to list details of Windows.  
@@ -16,7 +16,7 @@
     |--------------|---------------------------------|-------------------------------|------------------|
     |The table headings | should be listed above and the returned | data will be populated in these  | rows of the table|
 
-    >**Note:** Use this as a starting point
+    >**Note:** Use this script codeblock to help **FIND** the WMI class that contains the information we are looking for.
 
     ```PowerShell
     $allWMI = Get-WmiObject -List
@@ -33,6 +33,10 @@
 
     >**For Example:**
     ![Out-GridView](./src/03-01-02-Out-GridView.png)
+
+    ```PowerShell
+    Get-WMIObject Win32_OperatingSystem | Format-Table PSComputerName, Version, OSArchitecture, InstallDate
+    ```
 
 3. How about converting property values displayed in DMTF to be human readable?
 
@@ -84,5 +88,9 @@
     The following example would most likely be run on a routine basis by Active Directory Admins.
 
     ```PowerShell
-    Get-content C:\scripts\stalePClist-0*.txt  | ForEach-Object {Move-ADObject -identity $_ -targetpath "OU=STALE,OU=PCs,OU=PRODUCTION,DC=DOMAIN,DC=LAB”}
+    $root = New-Object System.DirectoryServices.DirectoryEntry
+    Get-content C:\labfiles\StaleComputers\StalePCs-<yourlogonname>.txt  | ForEach-Object { Move-ADObject -identity $_ -targetpath "OU=Stale,OU=PCs,OU=Production,$($root.distinguishedName)" }
+    # Example
+    $root = New-Object System.DirectoryServices.DirectoryEntry
+    Get-Content C:\labfiles\StaleComputers\StalePCs-POSHUser-0.txt | ForEach-Object {Get-ADComputer $_ | Move-ADObject -TargetPath "OU=STALE,OU=PCs,OU=PRODUCTION,$($root.distinguishedName)”}
     ```
