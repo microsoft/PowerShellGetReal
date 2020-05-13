@@ -29,3 +29,7 @@ Just in Time (JIT) and Just Enough Administration (JEA)
 In this last lab we have some fun and bring together all the pieces for a nice challenge.
 
 * [**Module 6 - $Automation.InvokeAll('GetReal')**](./Module6.md)
+
+Just a bunch of fun things that can be done with PowerShell
+
+* [**Module 7 - Fun With PowerShell**](./Module7.md)
