@@ -130,7 +130,7 @@ Invoke-Command -computername File1 -scriptblock {Get-WmiObject win32_networkadap
 ## 6.4 Query Remote Registry
 
 ```PowerShell
-Invoke-Command  -computername ws2008r2-dc01,ws2008r2-srv01,win7-01 {Get-ItemProperty "HKLM:\Software\Microsoft\Virtual Machine\Auto" | select integrationservicesversion} | Out-GridView
+Invoke-Command  -computername file1 {Get-ItemProperty "HKLM:\Software\Microsoft\Virtual Machine\Auto" | select integrationservicesversion} | Out-GridView
 ```
 
 ## 6.5 Check for Hotfix(es)
@@ -168,7 +168,7 @@ Import-Clixml C:\scripts\Patchlist.xml | Out-GridView
     After identifying all the ClassNames to be used, setup some code to create a persistent session to a remote computer.
 
     ```PowerShell
-    $computer = ‘<Name>’
+    $computer = 'file1'
     $option = New-CimSessionOption -Protocol Wsman
     $sess_params = @{'Computername'=$computer
                     'SessionOption'=$option
