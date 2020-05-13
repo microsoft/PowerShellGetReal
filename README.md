@@ -3,7 +3,7 @@
 
 PowerShell is a fun tool that can be integrated into all aspects of managing IT systems. This repository is designed to remove much of the fear associated from using a CLI instead of a GUI and lower “the hurdle” with real-world, easy to use/re-use IT Pro PowerShell scenarios.
 
-A few of the common scenarios that will be covered:
+A few of the common scenarios that could be achieved after learning the concepts in this course:
 
 * “Who rebooted this server and when?”
 * “Is this patch installed on these 400 systems?”  
