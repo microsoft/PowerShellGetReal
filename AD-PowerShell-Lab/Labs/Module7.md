@@ -20,7 +20,7 @@ $speech=New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer
 $speech.SpeakAsync(“Invoking speech using .NET”)
 ```
 
-Of you can read in a text file:
+Or you can read in a text file:
 
 ```PowerShell
 $SpeechText = gc -path C:\scripts\read_me.txt
