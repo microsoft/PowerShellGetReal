@@ -96,3 +96,86 @@
     ```
 
 ## 3.3 Other Kinds of Loops
+
+Let's close out this module with a simple function that ties many of the previous concepts together while also providing an introduction to other PowerShell built-in capabilities and features.
+
+>**Note:** Some of the concepts here are not covered in the previous modules. Please see the following concept articles.
+
+```Powershell
+Get-Help about_Functions_Advanced_Methods
+Get-Help about_Functions_Advanced_Parameters
+```
+
+```PowerShell
+function Test-CriticalService {
+    [cmdletbinding(SupportsShouldProcess = $true)]
+    param (
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = "Specify how long the function should run in Minutues"
+        )]
+        [int]$TimeEnd,
+
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = "Time in Seconds the loop should sleep before running again"
+        )]
+        [int]$PauseTimer,
+
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = "Enter the name of the Service to be queried"
+        )]
+        [string]$ServiceName,
+
+        [Parameter(
+            HelpMessage = "Location of log output. Default is current directory"
+        )]
+        [string]$LogDirectory = $PWD.path,
+
+        [switch]$NoLog,
+
+        [Parameter(
+            HelpMessage = "Use if you also want to try and restart the service"
+        )]
+        [switch]$StartService
+    )
+    #Set some initial variables
+    $TimeStart = Get-Date
+    $TimeCounter = $timestart.AddMinutes($TimeEnd)
+    Write-Verbose "Start Time $TimeStart"
+    Write-Verbose "End Time $TimeCounter"
+
+    #Initialize Log Directory
+    if (-not($NoLog))
+    {
+        $FileName = $ServiceName + $TimeStart.ToString('MM-dd-yyyy_hhmm') + '.txt'
+        New-Item $LogDirectory -Name $FileName -ItemType File -Force | Out-Null
+    }
+
+    #Region Main
+    Do
+    {
+        $TimeNow = Get-Date
+
+        $ServiceCurrentStatus = Get-Service -Name $ServiceName
+        if ($ServiceCurrentStatus.Status -eq "Stopped")
+        {  
+            $WriteMessage = "$($ServiceName) is currently $($ServiceCurrentStatus.Status)"
+            $WriteLog = $TimeStart.ToString() + ' : ' + $WriteMessage
+            Add-Content -Path $LogDirectory\$FileName -Value $WriteLog
+            Write-Verbose $WriteMessage
+        } 
+        elseif ($ServiceCurrentStatus.Status -eq "Running") 
+        {
+            $WriteMessage = "$($ServiceName) is currently $($ServiceCurrentStatus.Status)"
+            $WriteLog = $TimeStart.ToString() + ' : ' + $WriteMessage
+            Add-Content -Path $LogDirectory\$FileName -Value $WriteLog
+            Write-Verbose $WriteMessage
+        }
+
+        Start-Sleep -Seconds $PauseTimer
+    }
+    Until ($TimeNow -gt $TimeCounter)
+}
+```

@@ -49,11 +49,7 @@
 5. Leverage PowerShell to discover a way to end the notepad process you launched above.
 
     >**Note:** Do **NOT** use CTRL-C or Task Manager, instead leverage what you’ve learned during this class.  Only read the hints below if you are stuck…
-
     >**Hint:**  You’ll need to leave the ‘hung’ session open and launch a new PoSH window.
-
     >**2nd Hint:**  You’ll need to open a second remote session to your neighbor’s PC.
-
     >**3rd Hint:**  You’ll need to leverage the cmdlet used in Lesson 2.11.
-
     >**4th Hint:**  If you need another hint you probably need to get-help!
