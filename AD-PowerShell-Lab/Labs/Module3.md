@@ -94,3 +94,5 @@
     $root = New-Object System.DirectoryServices.DirectoryEntry
     Get-Content C:\labfiles\StaleComputers\StalePCs-POSHUser-0.txt | ForEach-Object {Get-ADComputer $_ | Move-ADObject -TargetPath "OU=STALE,OU=PCs,OU=PRODUCTION,$($root.distinguishedName)”}
     ```
+
+## 3.3 Other Kinds of Loops
