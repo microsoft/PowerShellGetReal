@@ -95,87 +95,103 @@
     Get-Content C:\labfiles\StaleComputers\StalePCs-POSHUser-0.txt | ForEach-Object {Get-ADComputer $_ | Move-ADObject -TargetPath "OU=STALE,OU=PCs,OU=PRODUCTION,$($root.distinguishedName)”}
     ```
 
-## 3.3 Other Kinds of Loops
+## 3.3 Moving to functions
 
-Let's close out this module with a simple function that ties many of the previous concepts together while also providing an introduction to other PowerShell built-in capabilities and features.
+Let's close out this module with a scenario intended to step from running simple CmdLets to a Script and then finally a function.
 
 >**Note:** Some of the concepts here are not covered in the previous modules. Please see the following concept articles.
 
 ```Powershell
 Get-Help about_Functions_Advanced_Methods
 Get-Help about_Functions_Advanced_Parameters
+Get-Help about_If
+Get-Help about_Try_Catch_Finally
 ```
+
+Let’s say within your environment you have an application service that is absolutely critical to be running at certain times for the business to maintain revenue. In the past, during business critical windows, the application has gone offline due to the underlying service being **Stopped**. Your manager has asked for your help to monitor the service and produce a log if the service is still running or not. Additionally, if it is not running provide an option to start the service.
+
+You decide to create this solution in **PowerShell**.
+
+Your goal is to create something that can be completely automated. However, you first need to do some investigation.
+
+Initially, you write down all the tasks you want to accomplish.
+
+>**Note:** ***Try this without looking ahead. After jotting down your own thoughts checkout our take.***
+
+1. Able to specify **how often** the service is checked
+2. Monitor the service for the entire duration of the critical window: **varying amount of time**
+3. Specify a directory **path** for the log file
+4. Option to not output to a log file.
+5. Option to **Start** the service
+
+While starting out the first thing to do is consider how we might provide a method for checking a service over a variable amount of time.
+
+Let's look through some of the PowerShell about concept articles!
 
 ```PowerShell
-function Test-CriticalService {
-    [cmdletbinding(SupportsShouldProcess = $true)]
-    param (
-        [Parameter(
-            Mandatory = $true,
-            HelpMessage = "Specify how long the function should run in Minutues"
-        )]
-        [int]$TimeEnd,
-
-        [Parameter(
-            Mandatory = $true,
-            HelpMessage = "Time in Seconds the loop should sleep before running again"
-        )]
-        [int]$PauseTimer,
-
-        [Parameter(
-            Mandatory = $true,
-            HelpMessage = "Enter the name of the Service to be queried"
-        )]
-        [string]$ServiceName,
-
-        [Parameter(
-            HelpMessage = "Location of log output. Default is current directory"
-        )]
-        [string]$LogDirectory = $PWD.path,
-
-        [switch]$NoLog,
-
-        [Parameter(
-            HelpMessage = "Use if you also want to try and restart the service"
-        )]
-        [switch]$StartService
-    )
-    #Set some initial variables
-    $TimeStart = Get-Date
-    $TimeCounter = $timestart.AddMinutes($TimeEnd)
-    Write-Verbose "Start Time $TimeStart"
-    Write-Verbose "End Time $TimeCounter"
-
-    #Initialize Log Directory
-    if (-not($NoLog))
-    {
-        $FileName = $ServiceName + $TimeStart.ToString('MM-dd-yyyy_hhmm') + '.txt'
-        New-Item $LogDirectory -Name $FileName -ItemType File -Force | Out-Null
-    }
-
-    #Region Main
-    Do
-    {
-        $TimeNow = Get-Date
-
-        $ServiceCurrentStatus = Get-Service -Name $ServiceName
-        if ($ServiceCurrentStatus.Status -eq "Stopped")
-        {  
-            $WriteMessage = "$($ServiceName) is currently $($ServiceCurrentStatus.Status)"
-            $WriteLog = $TimeStart.ToString() + ' : ' + $WriteMessage
-            Add-Content -Path $LogDirectory\$FileName -Value $WriteLog
-            Write-Verbose $WriteMessage
-        } 
-        elseif ($ServiceCurrentStatus.Status -eq "Running") 
-        {
-            $WriteMessage = "$($ServiceName) is currently $($ServiceCurrentStatus.Status)"
-            $WriteLog = $TimeStart.ToString() + ' : ' + $WriteMessage
-            Add-Content -Path $LogDirectory\$FileName -Value $WriteLog
-            Write-Verbose $WriteMessage
-        }
-
-        Start-Sleep -Seconds $PauseTimer
-    }
-    Until ($TimeNow -gt $TimeCounter)
-}
+Get-Help about_While
+Get-Help about_Do
+Get-Help about_for
 ```
+
+Out of those 3 help files is there any one in particle that looks promising to achieve our goal?
+
+>**Note:** Technically all of these could be used, with the right setup. But for our demonstration we will use the **Do {} Until ()** loop which is designed to run a block of code **first**, then **test** a condition. The statement block will run repeatedly until the condition statement evaluates to **true**.
+
+The next thing we need to determine is how can we use this loop based on a time. For that we need to look to see if there are any cmdlets available that will display the date/time.
+
+>**Hint:** Get-Help **Date*
+
+Now that we have all the basics to build our Do loop, try and focus on building something that will query our critical service. While there are other requirements to complete this project for our manager, let’s try to tackle one objective at a time.
+
+>***See if you can come up with some code on your own that will query a service until the specified time***  
+>**Hint:** Use one of the methods from Get-Date to add time that will then be evaluated in the Until condition statement.
+
+[**Here is our first attempt**](./answer/3.3.1_Do_Loop.md)
+
+At this point we have come up with a way to query a service for a specified amount of time. Now how can we integrate some of the other bits of information?
+
+>**Try** to come up with a way to integrate the other requirements.
+
+[**Our take on a complete solution**](./answer/3.3.1_Do_Loop_Function.md)
+
+To test out our suggested solution do the following:
+
+1. Copy and paste the [function](./answer/3.3.1_Do_Loop_Function.md) into the ISE
+2. Save the function as a ps1 file within your profile
+3. Open an **Elevated** PowerShell console
+4. Change directories to the root of your profile
+
+    ```PowerShell
+    Set-Location $Home
+    ```
+
+5. Dot source the script to import the function into your current scope
+
+    ```PowerShell
+    . $Home\PathToWhereYouSavedTheScript.ps1
+    ```
+
+6. Execute the function by running the following
+
+    ```PowerShell
+    Test-CriticalService -ServiceName WinRM -TimeEnd 2 -PauseTimer 5 -StartService -Verbose
+    ```
+
+7. Take a look at the log which will be at the root of your profile if you had executed **Step 4**
+
+    ```PowerShell
+    notepad $home\WinRM #Use tab completion to determine the rest of the file name
+    ```
+
+8. Finally lets use the Get-Help cmdlet to find out some information about this function
+
+    ```PowerShell
+    Get-Help Test-CriticalService -Full
+    ```
+
+    Notice how PowerShell displays the syntax information. It is able to do this based on the Param block.
+
+    Also look at the specific parameters. For all parameters that accept input, the type of input is displayed. In this case **String** or **int**
+
+Hopefully, this was an interesting first look at how to go from cmdlets to full scripts and tools. Toolmaking using PowerShell takes time to grasp completely. Use this as a starting point and I hope what you find is that the information to learn how to create useful tools is all contained within the PowerShell concept help! ***Perhaps after reading through some you will find ways to improve this example solution!*** There are many ways it could be improved.
