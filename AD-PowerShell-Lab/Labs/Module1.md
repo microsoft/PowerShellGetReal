@@ -175,7 +175,7 @@ Get-Help Get-Alias -Parameter Name
 -Name <String[]> # Does the [] following the word "String" mean anything?
 ```
 
-[**Answer**](./answer/1.6.1_Filtering_Challenge.md)
+Some suggested [**Answers**](./answer/1.6.1_Filtering_Challenge.md)
 
 ## 1.7 Fundamentals.Blitz()
 
